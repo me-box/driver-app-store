@@ -1,0 +1,24 @@
+FROM arm64v8/alpine:3.8 as gobuild
+RUN apk update && apk add build-base pkgconfig go git libzmq zeromq-dev alpine-sdk libsodium-dev
+#RUN apk update && apk add pkgconfig build-base bash autoconf automake libtool gettext openrc git libzmq zeromq-dev mercurial
+
+ENV GOPATH /
+WORKDIR /
+
+#COPY . . if you update the libs below build with --no-cache
+RUN go get -u gopkg.in/src-d/go-git.v4/...
+RUN go get -v -d github.com/toshbrown/lib-go-databox
+COPY . .
+RUN addgroup -S databox && adduser -S -g databox databox
+RUN GGO_ENABLED=0 GOOS=linux go build -a -tags netgo -installsuffix netgo -ldflags '-s -w' -o app /*.go
+
+FROM arm64v8/alpine:3.8
+COPY --from=gobuild /etc/passwd /etc/passwd
+RUN apk update && apk add libzmq
+USER databox
+WORKDIR /
+COPY --from=gobuild /app .
+LABEL databox.type="driver"
+EXPOSE 8080
+
+CMD ["./app"]

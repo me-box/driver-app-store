@@ -1,0 +1,37 @@
+{
+	"manifest-version": 1,
+
+	"name": "driver-app-store",
+	"databox-type": "driver",
+	"version": "0.3.0",
+
+	"description": "A basic driver to retrieve databox manifests from a git repo and put them in a store.",
+	"author": "Tosh Brown <Anthony.Brown@nottingham.ac.uk>",
+	"license": "MIT",
+	"tags": [
+		"app",
+		"store",
+		"manifests"
+	],
+
+	"homepage": "https://github.com/me-box/driver-app-store",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/me-box/driver-app-store"
+	},
+
+	"external-whitelist": [
+        {
+          "urls": [
+              "https://github.com/",
+              "https://www.github.com/"
+          ],
+          "description": "Used to clone github repos"
+        }
+      ],
+
+	"resource-requirements": {
+		"store": "core-store"
+	}
+
+}
