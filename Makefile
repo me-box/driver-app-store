@@ -18,10 +18,10 @@ publish-images:
 	docker push $(DEFAULT_REG)/$(IMAGE_NAME)-amd64:$(VERSION)
 	docker push $(DEFAULT_REG)/$(IMAGE_NAME)-arm64v8:$(VERSION)
 
-	docker manifest create --amend $(IMAGE_NAME):$(VERSION) $(IMAGE_NAME)-amd64:$(DATABOX_VERSION)
-	docker manifest annotate $(IMAGE_NAME):$(VERSION) $(IMAGE_NAME)-amd64:$(DATABOX_VERSION) --os linux --arch arm64
+	docker manifest create --amend $(IMAGE_NAME):$(VERSION) $(IMAGE_NAME)-amd64:$(VERSION)
+	docker manifest annotate $(IMAGE_NAME):$(VERSION) $(IMAGE_NAME)-amd64:$(VERSION) --os linux --arch arm64
 	#TODO re-enable this when core-store, export-servive and core network build for arm64v8
-	#docker manifest annotate $(IMAGE_NAME):$(VERSION) $(IMAGE_NAME)-arm64v8:$(DATABOX_VERSION)--os linux --arch arm64 --variant v8
+	#docker manifest annotate $(IMAGE_NAME):$(VERSION) $(IMAGE_NAME)-arm64v8:$(VERSION)--os linux --arch arm64 --variant v8
 	docker manifest push -p $(IMAGE_NAME)
 
 .PHONY: test
