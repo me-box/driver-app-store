@@ -11,9 +11,10 @@ RUN GGO_ENABLED=0 GOOS=linux go build -a -ldflags '-s -w' -o app /*.go
 
 FROM amd64/alpine:3.8
 COPY --from=gobuild /etc/passwd /etc/passwd
-RUN apk update && apk add libzmq
+RUN apk update && apk add --no-cache libzmq ca-certificates
+RUN mkdir -p /app && chown databox /app
 USER databox
-WORKDIR /
+WORKDIR /app
 COPY --from=gobuild /app .
 LABEL databox.type="driver"
 EXPOSE 8080

@@ -18,6 +18,9 @@ const databoxGitURL = "https://github.com/toshbrown/databox-manifest-store"
 
 func main() {
 
+	//give databox config time to take effect
+	time.Sleep(time.Second * 10)
+
 	gitURL := flag.String("giturl", databoxGitURL, "Git repo url")
 	storeURL := flag.String("storeurl", "", "databox store url normally from env vars")
 	arbiterURL := flag.String("arbiterurl", "", "databox arbiter url normally from env vars")
