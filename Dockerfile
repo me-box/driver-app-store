@@ -2,7 +2,7 @@ FROM golang:1.10.3-alpine3.8 as gobuild
 WORKDIR /
 ENV GOPATH=/
 RUN apk update && apk add pkgconfig build-base bash autoconf git libzmq zeromq-dev
-RUN go get -u gopkg.in/src-d/go-git.v4/...
+RUN go get -u -d gopkg.in/src-d/go-git.v4/...
 RUN go get -v -d github.com/toshbrown/lib-go-databox
 COPY . .
 RUN addgroup -S databox && adduser -S -g databox databox

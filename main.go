@@ -75,6 +75,22 @@ func main() {
 		fmt.Println(err)
 	}
 
+	metadata = databox.DataSourceMetadata{
+		Description:    "Databox manifests",
+		ContentType:    "application/json",
+		Vendor:         "Databox",
+		DataSourceType: "databox:manifests:all",
+		DataSourceID:   "all",
+		StoreType:      "kv",
+		IsActuator:     false,
+		Unit:           "",
+		Location:       "",
+	}
+	err = sc.RegisterDatasource(metadata)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	//
 	// Clone the requested git repo
 	//
@@ -103,6 +119,10 @@ func main() {
 				continue
 			}
 			err = sc.KVJSON.Write(string(manifest.DataboxType)+"s", manifest.Name, jsonStr)
+			if err != nil {
+				fmt.Println(err)
+			}
+			err = sc.KVJSON.Write("all", manifest.Name, jsonStr)
 			if err != nil {
 				fmt.Println(err)
 			}
