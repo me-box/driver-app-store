@@ -15,6 +15,19 @@ Its passable to test this component outside of databox, to do so run:
 
 # TODO
 
-- Add and interface to list manifests
-- Add the ability to upload local manifests (maybe via rpc api?)
-- Add the ability to add new data stores (maybe via rpc api?)
+- Add the ability to add new manifest stores
+
+## Development of databox was supported by the following funding
+
+```
+EP/N028260/1, Databox: Privacy-Aware Infrastructure for Managing Personal Data
+
+EP/N028260/2, Databox: Privacy-Aware Infrastructure for Managing Personal Data
+
+EP/N014243/1, Future Everyday Interaction with the Autonomous Internet of Things
+
+EP/M001636/1, Privacy-by-Design: Building Accountability into the Internet of Things (IoTDatabox)
+
+EP/M02315X/1, From Human Data to Personal Experience
+
+```

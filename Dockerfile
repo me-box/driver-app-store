@@ -4,6 +4,7 @@ ENV GOPATH=/
 RUN apk update && apk add pkgconfig build-base bash autoconf git libzmq zeromq-dev
 RUN go get -u -d gopkg.in/src-d/go-git.v4/...
 RUN go get -v -d github.com/toshbrown/lib-go-databox
+RUN go get -v -d github.com/gorilla/mux
 COPY . .
 RUN addgroup -S databox && adduser -S -g databox databox
 #RUN GGO_ENABLED=0 GOOS=linux go build -a -tags netgo -installsuffix netgo -ldflags '-s -w' -o app /*.go
@@ -16,6 +17,7 @@ RUN mkdir -p /app && chown databox /app
 USER databox
 WORKDIR /app
 COPY --from=gobuild /app .
+COPY --from=gobuild /public ./public
 LABEL databox.type="driver"
 EXPOSE 8080
 
