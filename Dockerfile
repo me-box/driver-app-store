@@ -3,7 +3,7 @@ WORKDIR /
 ENV GOPATH=/
 RUN apk update && apk add pkgconfig build-base bash autoconf git libzmq zeromq-dev
 RUN go get -u -d gopkg.in/src-d/go-git.v4/...
-RUN go get -v -d github.com/toshbrown/lib-go-databox
+RUN go get -v -d github.com/me-box/lib-go-databox
 RUN go get -v -d github.com/gorilla/mux
 COPY . .
 RUN addgroup -S databox && adduser -S -g databox databox

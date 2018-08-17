@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	databox "github.com/toshbrown/lib-go-databox"
+	databox "github.com/me-box/lib-go-databox"
 	git "gopkg.in/src-d/go-git.v4"
 )
 

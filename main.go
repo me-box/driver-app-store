@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	databox "github.com/toshbrown/lib-go-databox"
+	databox "github.com/me-box/lib-go-databox"
 )
 
 const databoxGitURL = "https://github.com/me-box/databox-manifest-store"
