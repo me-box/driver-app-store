@@ -18,7 +18,7 @@ import (
 	databox "github.com/toshbrown/lib-go-databox"
 )
 
-const databoxGitURL = "https://github.com/toshbrown/databox-manifest-store"
+const databoxGitURL = "https://github.com/me-box/databox-manifest-store"
 
 func main() {
 
