@@ -40,3 +40,37 @@ window.onload = function () {
       }
 
  }
+
+ function UninstallStore(name, giturl) {
+    return fetch("/app-store/ui/api/removeStore", {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify({"name":name,"giturl":giturl}),
+    })
+    .then(() => {
+        location.reload()
+    });
+ }
+
+ function AddStore() {
+    name = document.getElementById('repoName').value
+    giturl = document.getElementById('repoUrl').value
+    return fetch("/app-store/ui/api/addStore", {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify({"name":name,"giturl":giturl}),
+    })
+    .then(() => {
+        location.reload()
+    });
+ }
