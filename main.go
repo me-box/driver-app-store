@@ -27,8 +27,10 @@ var databoxPlatformStore = Store{
 
 func main() {
 
+	gitURL := flag.String("giturl", "", "databox store url normally from env vars")
 	storeURL := flag.String("storeurl", "", "databox store url normally from env vars")
 	arbiterURL := flag.String("arbiterurl", "", "databox arbiter url normally from env vars")
+	tagOption := flag.String("tag", "", "repo version tag normally from env vars")
 	flag.Parse()
 
 	//
@@ -36,14 +38,18 @@ func main() {
 	//
 	var sc *databox.CoreStoreClient
 	insideDatabox := false
+	tag := ""
 	if *storeURL != "" {
 		//used for testing outside of databox
 		ac, _ := databox.NewArbiterClient("./", "./", *arbiterURL)
 		sc = databox.NewCoreStoreClient(ac, "./", *storeURL, false)
+		tag = *tagOption
+		databoxPlatformStore.GitUrl = *gitURL
 	} else {
 		//look in the standard databox places for config data.
 		DATABOX_ZMQ_ENDPOINT := os.Getenv("DATABOX_ZMQ_ENDPOINT")
 		sc = databox.NewDefaultCoreStoreClient(DATABOX_ZMQ_ENDPOINT)
+		tag = os.Getenv("DATABOX_VERSION")
 		insideDatabox = true
 		//give databox config time to take effect
 		time.Sleep(time.Second * 10)
@@ -55,7 +61,7 @@ func main() {
 	registerMyDatasource(sc)
 
 	forceUpdateChan := make(chan int)
-	go PollForManifests(sc, forceUpdateChan)
+	go PollForManifests(sc, tag, forceUpdateChan)
 
 	//
 	// Handel Https requests
@@ -88,7 +94,7 @@ func main() {
 // Json decode errors are classed as warnings, but these are not written to the store.
 // All valid manifests are written to the correct datasource.
 //
-func PollForManifests(sc *databox.CoreStoreClient, updateChan <-chan int) {
+func PollForManifests(sc *databox.CoreStoreClient, tag string, updateChan <-chan int) {
 
 	for {
 
@@ -98,7 +104,7 @@ func PollForManifests(sc *databox.CoreStoreClient, updateChan <-chan int) {
 
 			// Clone/open the requested git repo
 			name := fmt.Sprintf("%x", md5.Sum([]byte(store.GitUrl)))
-			manifestStore, err := NewGitStore(store.GitUrl, "./"+name)
+			manifestStore, err := NewGitStore(store.GitUrl, "./"+name, tag)
 			if err != nil {
 				fmt.Println("[Error] Getting git repo ", store.GitUrl, " ", err)
 				continue
