@@ -32,6 +32,26 @@
 
 	"resource-requirements": {
 		"store": "core-store"
-	}
+	},
+    "provides": [
+		{
+			"data-source-type": "databox:manifests:app",
+			"description": "Databox app manifests",
+			"store-type": "kv",
+			"schema": {}
+		},
+		{
+			"data-source-type": "databox:manifests:driver",
+			"description": "Databox driver manifests",
+			"store-type": "kv",
+			"schema": {}
+		},
+		{
+			"data-source-type": "databox:manifests:all",
+			"description": "Databox all manifests",
+			"store-type": "kv",
+			"schema": {}
+        }
+    ]
 
 }
