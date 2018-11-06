@@ -50,6 +50,7 @@ func main() {
 		DATABOX_ZMQ_ENDPOINT := os.Getenv("DATABOX_ZMQ_ENDPOINT")
 		sc = databox.NewDefaultCoreStoreClient(DATABOX_ZMQ_ENDPOINT)
 		tag = os.Getenv("DATABOX_VERSION")
+		databoxPlatformStore.GitUrl = os.Getenv("DATABOX_STORE_URL")
 		insideDatabox = true
 		//give databox config time to take effect
 		time.Sleep(time.Second * 10)
