@@ -77,6 +77,7 @@ func main() {
 	router.HandleFunc(pathPrefix+"/ui/api/addManifest", AddManifest(sc)).Methods("POST")
 	router.HandleFunc(pathPrefix+"/ui/api/addStore", AddStore(sc, forceUpdateChan)).Methods("POST")
 	router.HandleFunc(pathPrefix+"/ui/api/removeStore", removeStore(sc, forceUpdateChan)).Methods("POST")
+	router.HandleFunc(pathPrefix+"/ui/api/refresh", refresh(sc, forceUpdateChan))
 
 	static := http.StripPrefix(pathPrefix+"/ui/static", http.FileServer(http.Dir("./public/")))
 	router.PathPrefix(pathPrefix + "/ui/static").Handler(static)
@@ -282,6 +283,17 @@ func AddManifest(sc *databox.CoreStoreClient) func(w http.ResponseWriter, r *htt
 	}
 }
 
+func refresh(sc *databox.CoreStoreClient, forceUpdateChan chan int) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{"status": %s}`, "200")
+
+		//send a message to force an update
+		forceUpdateChan <- 1
+	}
+}
+
 func DisplayUI(sc *databox.CoreStoreClient) func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -318,6 +330,7 @@ func DisplayUI(sc *databox.CoreStoreClient) func(w http.ResponseWriter, r *http.
 				<strong>We're sorry but ui doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
 				</noscript>
 				<h2>Installed manifests</h2>
+				<p><button onclick="RefreshStore()">Refresh</button></p>
 				<div id="manifestList">
 					<ul>
 						%s
