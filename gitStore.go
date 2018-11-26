@@ -21,6 +21,8 @@ type manitestStoreage struct {
 
 func NewGitStore(repoUrl string, path string, tag string) (*manitestStoreage, error) {
 
+	os.RemoveAll(path)
+
 	r, err := git.PlainClone(path, false, &git.CloneOptions{
 		URL:      repoUrl,
 		Progress: os.Stdout,
@@ -44,10 +46,6 @@ func (ms *manitestStoreage) Get() (*[]databox.Manifest, error) {
 	var mlist []databox.Manifest
 
 	wt, err := ms.repo.Worktree()
-	wt.Pull(&git.PullOptions{
-		Depth:    1,
-		Progress: os.Stdout,
-	})
 
 	//Checkout the correct tag based on databox version.
 	//if we are on latest or the tag is missing just leave it on master
@@ -64,6 +62,11 @@ func (ms *manitestStoreage) Get() (*[]databox.Manifest, error) {
 			})
 		}
 		return nil
+	})
+
+	wt.Pull(&git.PullOptions{
+		Depth:    1,
+		Progress: os.Stdout,
 	})
 
 	files, err := ioutil.ReadDir(ms.path)
