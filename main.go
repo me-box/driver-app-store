@@ -25,31 +25,29 @@ var databoxPlatformStore = Store{
 	GitUrl: "https://github.com/me-box/databox-manifest-store",
 }
 
+var storeURL *string
+var arbiterURL *string
+
 func main() {
 
 	gitURL := flag.String("giturl", "", "databox store url normally from env vars")
-	storeURL := flag.String("storeurl", "", "databox store url normally from env vars")
-	arbiterURL := flag.String("arbiterurl", "", "databox arbiter url normally from env vars")
+	storeURL = flag.String("storeurl", "", "databox store url normally from env vars")
+	arbiterURL = flag.String("arbiterurl", "", "databox arbiter url normally from env vars")
 	tagOption := flag.String("tag", "", "repo version tag normally from env vars")
 	flag.Parse()
 
 	//
 	// work out if we are running inside or outside databox and set up lib-go-databox accordingly
 	//
-	var sc *databox.CoreStoreClient
 	insideDatabox := false
 	tag := ""
 	if *storeURL != "" {
 		//used for testing outside of databox
-		ac, _ := databox.NewArbiterClient("./", "./", *arbiterURL)
-		sc = databox.NewCoreStoreClient(ac, "./", *storeURL, false)
 		tag = *tagOption
 		databoxPlatformStore.GitUrl = *gitURL
 	} else {
-		//look in the standard databox places for config data.
-		DATABOX_ZMQ_ENDPOINT := os.Getenv("DATABOX_ZMQ_ENDPOINT")
-		sc = databox.NewDefaultCoreStoreClient(DATABOX_ZMQ_ENDPOINT)
 		tag = os.Getenv("DATABOX_VERSION")
+		databoxPlatformStore.GitUrl = os.Getenv("DATABOX_STORE_URL")
 		insideDatabox = true
 		//give databox config time to take effect
 		time.Sleep(time.Second * 10)
@@ -58,10 +56,10 @@ func main() {
 	//
 	// Register the app and driver KV datasources
 	//
-	registerMyDatasource(sc)
+	registerMyDatasource()
 
 	forceUpdateChan := make(chan int)
-	go PollForManifests(sc, tag, forceUpdateChan)
+	go PollForManifests(tag, forceUpdateChan)
 
 	//
 	// Handel Https requests
@@ -72,10 +70,11 @@ func main() {
 	}
 	router := mux.NewRouter()
 
-	router.HandleFunc(pathPrefix+"/ui", DisplayUI(sc)).Methods("GET")
-	router.HandleFunc(pathPrefix+"/ui/api/addManifest", AddManifest(sc)).Methods("POST")
-	router.HandleFunc(pathPrefix+"/ui/api/addStore", AddStore(sc, forceUpdateChan)).Methods("POST")
-	router.HandleFunc(pathPrefix+"/ui/api/removeStore", removeStore(sc, forceUpdateChan)).Methods("POST")
+	router.HandleFunc(pathPrefix+"/ui", DisplayUI()).Methods("GET")
+	router.HandleFunc(pathPrefix+"/ui/api/addManifest", AddManifest()).Methods("POST")
+	router.HandleFunc(pathPrefix+"/ui/api/addStore", AddStore(forceUpdateChan)).Methods("POST")
+	router.HandleFunc(pathPrefix+"/ui/api/removeStore", removeStore(forceUpdateChan)).Methods("POST")
+	router.HandleFunc(pathPrefix+"/ui/api/refresh", refresh(forceUpdateChan))
 
 	static := http.StripPrefix(pathPrefix+"/ui/static", http.FileServer(http.Dir("./public/")))
 	router.PathPrefix(pathPrefix + "/ui/static").Handler(static)
@@ -89,13 +88,33 @@ func main() {
 
 }
 
+func insideDatabox() bool {
+	if *storeURL != "" {
+		return false
+	}
+	return true
+}
+
+func getStoreClient() *databox.CoreStoreClient {
+	var sc *databox.CoreStoreClient
+	if !insideDatabox() {
+		ac, _ := databox.NewArbiterClient("./", "./", *arbiterURL)
+		sc = databox.NewCoreStoreClient(ac, "./", *storeURL, false)
+	} else {
+		DATABOX_ZMQ_ENDPOINT := os.Getenv("DATABOX_ZMQ_ENDPOINT")
+		sc = databox.NewDefaultCoreStoreClient(DATABOX_ZMQ_ENDPOINT)
+	}
+	return sc
+}
+
 // PollForManifests will:
 // Process the files in the repo looking for databox manifests in the root.
 // Json decode errors are classed as warnings, but these are not written to the store.
 // All valid manifests are written to the correct datasource.
 //
-func PollForManifests(sc *databox.CoreStoreClient, tag string, updateChan <-chan int) {
+func PollForManifests(tag string, updateChan <-chan int) {
 
+	sc := getStoreClient()
 	for {
 
 		storeList := getStores(sc)
@@ -145,10 +164,12 @@ func PollForManifests(sc *databox.CoreStoreClient, tag string, updateChan <-chan
 	}
 }
 
-//removeStore http handler to add another store to the driver-app-store its should be a git repo
-//that is viable publicly (read only)
-func removeStore(sc *databox.CoreStoreClient, forceUpdateChan chan int) func(w http.ResponseWriter, r *http.Request) {
+//removeStore http handler to remove a store
+func removeStore(forceUpdateChan chan int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		sc := getStoreClient()
+
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -194,8 +215,12 @@ func removeStore(sc *databox.CoreStoreClient, forceUpdateChan chan int) func(w h
 
 //AddStore http handler to add another store to the driver-app-store its should be a git repo
 //that is viable publicly (read only)
-func AddStore(sc *databox.CoreStoreClient, forceUpdateChan chan int) func(w http.ResponseWriter, r *http.Request) {
+func AddStore(forceUpdateChan chan int) func(w http.ResponseWriter, r *http.Request) {
+
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		sc := getStoreClient()
+
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -234,9 +259,12 @@ func AddStore(sc *databox.CoreStoreClient, forceUpdateChan chan int) func(w http
 }
 
 //AddManifest http handler to manually adda manifest to the manifest store used in development
-func AddManifest(sc *databox.CoreStoreClient) func(w http.ResponseWriter, r *http.Request) {
+func AddManifest() func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		sc := getStoreClient()
+
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -281,9 +309,23 @@ func AddManifest(sc *databox.CoreStoreClient) func(w http.ResponseWriter, r *htt
 	}
 }
 
-func DisplayUI(sc *databox.CoreStoreClient) func(w http.ResponseWriter, r *http.Request) {
+func refresh(forceUpdateChan chan int) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{"status": %s}`, "200")
+
+		//send a message to force an update
+		forceUpdateChan <- 1
+	}
+}
+
+func DisplayUI() func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		sc := getStoreClient()
 
 		//create manifest list
 		manifestList, _ := sc.KVJSON.ListKeys("all")
@@ -317,6 +359,7 @@ func DisplayUI(sc *databox.CoreStoreClient) func(w http.ResponseWriter, r *http.
 				<strong>We're sorry but ui doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
 				</noscript>
 				<h2>Installed manifests</h2>
+				<p><button onclick="RefreshStore()">Refresh</button></p>
 				<div id="manifestList">
 					<ul>
 						%s
@@ -354,7 +397,10 @@ func DisplayUI(sc *databox.CoreStoreClient) func(w http.ResponseWriter, r *http.
 }
 
 //registerMyDatasource just sets up the data sources
-func registerMyDatasource(sc *databox.CoreStoreClient) {
+func registerMyDatasource() {
+
+	sc := getStoreClient()
+
 	metadata := databox.DataSourceMetadata{
 		Description:    "Databox app manifests",
 		ContentType:    "application/json",

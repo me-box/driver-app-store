@@ -5,7 +5,7 @@ require (
 	github.com/gorilla/mux v1.6.2
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e // indirect
-	github.com/me-box/lib-go-databox v0.5.11
+	github.com/me-box/lib-go-databox v0.6.1
 	github.com/mitchellh/go-homedir v1.0.0 // indirect
 	github.com/pelletier/go-buffruneio v0.2.0 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect

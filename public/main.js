@@ -41,6 +41,21 @@ window.onload = function () {
 
  }
 
+ function RefreshStore () {
+    return fetch("/app-store/ui/api/refresh", {
+        method: "GET",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+    })
+    .then(() => {
+        console.log("Refressing")
+    });
+ }
+
  function UninstallStore(name, giturl) {
     return fetch("/app-store/ui/api/removeStore", {
         method: "POST",
