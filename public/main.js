@@ -10,10 +10,6 @@ window.onload = function () {
         let files = fileSelect.files;
         let formData = new FormData();
         let file = files[0];
-        if (!file.type.match(/json/i)) {
-            alert("Incorrect file type")
-            return
-        }
         uploadButton.innerHTML = 'Uploading...';
         fetch('ui/api/addManifest', {
             method: 'POST',
